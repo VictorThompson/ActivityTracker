@@ -176,3 +176,8 @@ def rm_run(run):
 
 def km_to_mi(km):
 	return km * 0.62137
+
+def get_data():
+    moving_time, stopped_time, moving_distance, stopped_distance, max_speed = gpx.get_moving_data()
+    return moving_distance, moving_time
+

@@ -136,6 +136,13 @@ MainView {
             call('geepeeex.rm_run', [run])
         }
 
+        function get_data() {
+            call('geepeeex.get_data', [], function data_callback(moving_distance, moving_time) {
+                overlay.time = moving_time
+                overlay.distance = moving_distance
+            })
+        }//get_data
+
 
     }//Python
 
@@ -268,6 +275,7 @@ MainView {
                             if (src.position.latitudeValid && src.position.longitudeValid && src.position.altitudeValid) {
                                 pygpx.addpoint(gpxx,coord.latitude,coord.longitude,coord.altitude)
                                 pline.addCoordinate(QtPositioning.coordinate(coord.latitude,coord.longitude, coord.altitude))
+                                call('geepeeex.get_data', [])
                             }
                         }
                     }
@@ -369,6 +377,69 @@ MainView {
                     }
                 }//Dialog component
 
+                Timer {
+                    id: timer
+                    interval: 50
+                    repeat: true
+
+                    property date startTime
+
+                    onTriggered: overlay.time = Qt.formatTime()((Date - startTime), "hhmmss")
+                }
+
+                Rectangle {
+                    id: overlay
+                    color: "white"
+                    height: units.gu(9)
+                    opacity: .8
+                    width: units.gu(25)
+                    anchors {
+                        left: parent.left
+                        margins: units.gu(1)
+                        top: parent.top
+                    }
+
+                    property string distance: ""
+                    property string speed: ""
+                    property string time: ""
+
+                    Column {
+                        spacing: units.gu(1)
+                        Row {
+                            Label {
+                                font.bold: true
+                                text: i18n.tr("Distance") + ": "
+                            }
+
+                            Label {
+                                text: overlay.distance
+                            }
+                        }
+
+                        Row {
+                            Label {
+                                font.bold: true
+                                text: i18n.tr("Speed") + ": "
+                            }
+
+                            Label {
+                                text: overlay.speed
+                            }
+                        }
+
+                        Row {
+                            Label {
+                                font.bold: true
+                                text: i18n.tr("Time") + ": "
+                            }
+
+                            Label {
+                                text: overlay.time
+                            }
+                        }
+                    }
+                }
+
                 Item {
                     width: parent.width
 
@@ -396,6 +467,10 @@ MainView {
                                     map.addMapItem(pline)
                                     am_running=true
                                 }
+
+                                // Start timer
+                                timer.start()
+                                timer.startTime = new Date
                             }
                         }
                         Button {
@@ -410,6 +485,8 @@ MainView {
                                 am_running = false
                                 PopupUtils.open(dialog)
 
+                                // Stop timer
+                                timer.stop()
                             }
                         }
                     }
